@@ -128,7 +128,7 @@ class Request:
     def to_msg_dict(self) -> Dict[str, Any]:
         # Returns a minimal version of the request of purposes of broadcasting to all ranks
         input_tokens = self.input_tokens
-        if input_tokens is not None:
+        if input_tokens is not None and type(input_tokens) is not list:
             input_tokens = self.input_tokens.tolist()
         return {"uid": self.uid, "input_tokens": input_tokens}
 

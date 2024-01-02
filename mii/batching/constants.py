@@ -15,6 +15,8 @@ RETURN_FULL_TEXT_KWARG = "return_full_text"
 DO_SAMPLE_KWARG = "do_sample"
 STOP_KWARG = "stop"
 
+PROMPT_TOKEN_IDS = 'prompt_token_ids' # use prompt_token_ids
+
 # Default kwarg values
 MIN_NEW_TOKENS_DEFAULT = 0
 STREAM_DEFAULT = False

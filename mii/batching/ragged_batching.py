@@ -39,7 +39,8 @@ from mii.batching.constants import (MAX_LENGTH_KWARG,
                                     TOP_P_NAME,
                                     TEMP_NAME,
                                     SAMPLER_NAME,
-                                    STOP_NAME)
+                                    STOP_NAME,
+                                    PROMPT_TOKEN_IDS)
 from mii.batching.data_classes import Response, Request, RequestBatch
 from mii.batching.generation.logit_processors import TopPLogitProcessor, TopKLogitProcessor, TemperatureLogitProcessor
 from mii.batching.generation.samplers import LogitsSampler, GreedySampler
@@ -427,6 +428,9 @@ class RaggedBatchBase:
                     tokenizer=self.tokenizer)
         post_processing.append(stop_name)
 
+        # pop prompt_token_ids if it exists
+        prompt_token_ids = kwargs.pop(PROMPT_TOKEN_IDS, None)
+
         assert kwargs == {}, f"Unknown keyword arguments {kwargs}"
 
         return Request(
@@ -547,6 +551,8 @@ class MIIAsyncPipeline(RaggedBatchBase):
         self.UID_RANGE_LB = 1
         self.UID_RANGE_UB = 10000
 
+        # print(f"Starting server with async pipeline")
+
     def __call__(self) -> None:
         # CUDA device gets reset, must set it again to avoid problems
         get_accelerator().set_device(int(os.getenv("LOCAL_RANK", "0")))
@@ -587,7 +593,13 @@ class MIIAsyncPipeline(RaggedBatchBase):
             if tid not in self.result_queues:
                 self.result_queues[tid] = queue.Queue()
 
-        input_tokens = self.tokenizer.encode(prompt)
+        prompt_token_ids = kwargs.get("prompt_token_ids", None)
+        if prompt_token_ids is not None:
+            input_tokens = torch.tensor(eval(prompt_token_ids)) 
+        else:
+            input_tokens = self.tokenizer.encode(prompt)
+            # print(input_tokens)
+
         request = self.make_request(tid, uid, input_tokens, kwargs)
         self.request_queue.put(request)
 
